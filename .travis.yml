@@ -1,0 +1,28 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t userbogdan/django-blog -f Dockerfile.prod .
+
+script:
+  - docker run userbogdan/django-blog python manage.py test
+
+after_success:
+  - docker build -t userbogdan/django-blog -f Dockerfile.prod .
+  - docker build -t userbogdan/django-nginx ./nginx
+  - echo $DOCKER_PASSWORD | docker login -u $DOCKER_ID --password-stdin
+  - docker push userbogdan/django-blog
+  - docker push userbogdan/django-nginx
+
+deploy:
+  provider: elasticbeanstalk
+  region: #
+  app: #
+  env: #
+  bucket_name: #
+  bucket_path: #
+  on:
+    branch: master
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key: $AWS_SECRET_KEY
